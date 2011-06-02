@@ -343,25 +343,11 @@ class SearchBackend(BaseSearchBackend):
             if narrowed_results:
                 raw_results.filter(narrowed_results)
             
-            # Determine the page.
-            page_num = 0
-            
             if end_offset is None:
                 end_offset = 1000000
             
-            if start_offset is None:
-                start_offset = 0
-            
-            page_length = end_offset - start_offset
-            
-            if page_length and page_length > 0:
-                page_num = start_offset / page_length
-            
-            # Increment because Whoosh uses 1-based page numbers.
-            page_num += 1
-            
             try:
-                raw_page = ResultsPage(raw_results, page_num, page_length)
+                raw_page = ResultsPage(raw_results, 1, end_offset)
             except ValueError:
                 return {
                     'results': [],
@@ -374,6 +360,8 @@ class SearchBackend(BaseSearchBackend):
             
             if hasattr(narrow_searcher, 'close'):
                 narrow_searcher.close()
+            
+            results['results'] = results['results'][start_offset:]
             
             return results
         else:
